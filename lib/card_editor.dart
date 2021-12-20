@@ -15,6 +15,7 @@ class CardEditor extends StatefulWidget {
 class _CardEditorState extends State<CardEditor> {
 
   late final Box _decks, _meta;
+  Box? _currentBox;
 
   @override
   void initState() {
@@ -29,18 +30,27 @@ class _CardEditorState extends State<CardEditor> {
     return Hive.openBox(current);
   }
 
+  //Wird aufgerufen, wenn man ein neues Deck erstellt
   void updateDecks(String newDeck) async {
     setState(() {
       _decks.add(newDeck);
       _meta.put("selectedDeck", newDeck);
     });
-    Hive.openBox(newDeck);
+    Hive.openBox(newDeck).then((value) => _currentBox = Hive.box(newDeck));
+  }
+
+  void updateDeck(IndexCard newCard) {
+    final current = _meta.get("selectedDeck");
+    assert(current != null);
+    final box = Hive.box(current);
+    setState(() {
+      box.add(newCard);
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
+    return Padding(padding: const EdgeInsets.all(12), child: Column(
       children: [
         Row(
           children: [
@@ -62,39 +72,23 @@ class _CardEditorState extends State<CardEditor> {
             }, icon: const Icon(Icons.add), label: const Text("Deck erstellen"))
           ],
         ),
-        Expanded(child: FutureBuilder(
-          future: loadCurrentDeck(),
-          builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-            var current = _meta.get("selectedDeck");
-            if (!snapshot.hasData) {
-              return const Center(child: Text("Decks werden geladen...", style: TextStyle(color: Colors.grey)));
-            }
-            if (current == null) {
-              return const Center(child: Text("Es gibt noch keine Decks.", style: TextStyle(color:Colors.grey)));
-            }
+        Expanded(child: Scaffold(
+          floatingActionButton: _currentBox == null ? null : FloatingActionButton(
+            onPressed: () {
 
-            final Box box = Hive.box(current);
-            var button = FloatingActionButton(onPressed: () {
-
-            }, child: const Icon(Icons.add));
-
-            if (box.isEmpty) {
-              return Scaffold(
-                  floatingActionButton: button,
-                  body: const Center(child: Text("Das Deck ist leer.", style: TextStyle(color: Colors.grey)))
-              );
-            }
-            return Expanded(child: ListView.builder(
-                itemCount: box.values.length,
-                itemBuilder: (context, index) {
-                  return ListTile(
-                    title: Text(box.getAt(index).getQuestion())
-                  );
-                }
-            ));
-          },
+            }, child: const Icon(Icons.add),
+          ),
+          body: _currentBox == null
+              ? const Center(child: Text("Es gibt keine Decks", style: TextStyle(color: Colors.grey)))
+              : Expanded(child: ListView.builder(
+                    itemCount: _currentBox!.length,
+                    itemBuilder: (context, index) {
+                      return Text(_currentBox!.getAt(index).getQuestion());
+                    }
+                )
+          )
         ))
       ]
-    );
+    ));
   }
 }
