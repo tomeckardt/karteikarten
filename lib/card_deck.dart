@@ -18,6 +18,8 @@ class Deck extends HiveObject {
 
   List<IndexCard> getIndexCards() => _cards;
 
+  int length() => _cards.length;
+
   Map<String, dynamic> toJson() => {
     "IndexCards": _cards,
     "name": name
