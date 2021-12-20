@@ -20,7 +20,8 @@ void main() async {
   Hive.init(directory.path);
   Hive.registerAdapter(IndexCardAdapter());
   Hive.registerAdapter(DeckAdapter());
-  await Hive.openBox("cardeditor");
+  await Hive.openBox("decks");
+  await Hive.openBox("metadata");
   runApp(const MainApp());
 }
 

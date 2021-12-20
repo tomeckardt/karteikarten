@@ -3,6 +3,8 @@ import 'package:hive/hive.dart';
 
 import 'card_deck.dart';
 
+part 'dialogs.dart';
+
 class CardEditor extends StatefulWidget {
   const CardEditor({Key? key}) : super(key: key);
 
@@ -12,161 +14,87 @@ class CardEditor extends StatefulWidget {
 
 class _CardEditorState extends State<CardEditor> {
 
-  List<Deck> _decks = [];
-  Deck? _selected;
-  String? _newDeckName;
-  late final Box _box;
+  late final Box _decks, _meta;
 
   @override
   void initState() {
+    _decks = Hive.box("decks");
+    _meta = Hive.box("metadata");
     super.initState();
-    _box = Hive.box("cardeditor");
-    _selected = _box.get("selected");
-    print(_selected);
-    _decks = _box.get("decks") ?? [];
   }
 
-  void _showAddCardDialog() {
-    String? q, a;
-    if (_selected == null) return; //Sollte eigentlich nie passieren
-    showDialog(context: context, builder: (context) {
-      return AlertDialog(
-        title: const Text("Neue Karte"),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              decoration: const InputDecoration(
-                  labelText: "Frage"
-              ),
-              onChanged: (value) {
-                q = value;
-              },
-            ),
-            TextField(
-              decoration: const InputDecoration(
-                labelText: "Antwort"
-              ),
-              onChanged: (value) {
-                a = value;
-              }
-            )
-          ]
-        ),
-        actions: [
-          TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: const Text("Abbrechen")
-          ),
-          TextButton(
-              onPressed: () {
-                if (q != null && a != null) {
-                  setState(() {
-                    _selected!.getIndexCards().add(IndexCard(q!, a!));
-                  });
-                }
-                Navigator.of(context).pop();
-              },
-              child: const Text("OK")
-          )
-        ],
-      );
-    });
+  Future loadCurrentDeck() async {
+    var current = _meta.get("selectedDeck", defaultValue: []);
+    if (current == null) return;
+    return Hive.openBox(current);
   }
 
-  void _showAddDeckDialog() {
-    showDialog(context: context, builder: (context) {
-      return AlertDialog(
-        title: const Text("Neues Deck"),
-        content: TextField(
-          decoration: const InputDecoration(
-            labelText: "Deckname"
-          ),
-          onChanged: (value) {
-            _newDeckName = value;
-          },
-        ),
-        actions: [
-          TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: const Text("Abbrechen")
-          ),
-          TextButton(
-              onPressed: () {
-                if (_newDeckName != null) {
-                  setState(() {
-                    Deck deck = Deck(_newDeckName!);
-                    _selected = deck;
-                    _decks.add(deck);
-                  });
-                }
-                Navigator.of(context).pop();
-              },
-              child: const Text("OK")
-          )
-        ],
-      );
+  void updateDecks(String newDeck) async {
+    setState(() {
+      _decks.add(newDeck);
+      _meta.put("selectedDeck", newDeck);
     });
+    Hive.openBox(newDeck);
   }
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-        padding: const  EdgeInsets.all(12),
-        child: Scaffold(
-            floatingActionButton:
-              _selected == null ? null : FloatingActionButton(onPressed: _showAddCardDialog, child: const Icon(Icons.add)),
-            body: Column(
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                        child: DropdownButton(
-                          items:
-                          _decks.map((e) => DropdownMenuItem<Deck>(
-                              child: Text(e.name),
-                              value: e
-                          )).toList(growable: true),
-                          hint: const Text("Keine Decks"),
-                          onChanged: (value) {
-                            setState(() {
-                              _selected = value as Deck;
-                              print(_selected);
-                              _box.put("selected", _selected);
-                              print(_box.get("selected"));
-                            });
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Row(
+          children: [
+            Expanded(child: DropdownButton(
+              items: _decks.values.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
+              hint: const Text("Keine Decks"),
+              isExpanded: true,
+              onChanged: (value) async {
+                var current = _meta.get("selectedDeck");
+                setState(() {
+                  _meta.put("selectedDeck", value);
+                });
+              },
+              value: _meta.get("selectedDeck"),
+            )),
+            const Padding(padding: EdgeInsets.all(12)),
+            ElevatedButton.icon(onPressed: () {
+              showDialog(context: context, builder: (context) => _showAddDeckDialog(this));
+            }, icon: const Icon(Icons.add), label: const Text("Deck erstellen"))
+          ],
+        ),
+        Expanded(child: FutureBuilder(
+          future: loadCurrentDeck(),
+          builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+            var current = _meta.get("selectedDeck");
+            if (!snapshot.hasData) {
+              return const Center(child: Text("Decks werden geladen...", style: TextStyle(color: Colors.grey)));
+            }
+            if (current == null) {
+              return const Center(child: Text("Es gibt noch keine Decks.", style: TextStyle(color:Colors.grey)));
+            }
 
-                          },
-                          value: _selected,
-                          isExpanded: true,
-                        )
-                    ),
-                    const Padding(padding: EdgeInsets.all(12)),
-                    ElevatedButton.icon(
-                        onPressed: _showAddDeckDialog,
-                        label: const Text("Deck hinzufügen"),
-                        icon: const Icon(Icons.add))
-                  ],
-                ),
-                const Padding(padding: EdgeInsets.all(20)),
-                Scrollbar(
-                    child: _selected == null
-                        ? Container()
-                        : _selected!.getIndexCards().isEmpty
-                          ? const Text("Dieses Deck ist leer", style: TextStyle(color: Colors.grey))
-                          : Column(
-                              mainAxisAlignment: MainAxisAlignment.start,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: _selected!.getIndexCards().map((e) => Text(e.getQuestion())).toList(),
-                            )
-                )
-              ],
-            )
-        )
+            final Box box = Hive.box(current);
+            var button = FloatingActionButton(onPressed: () {
+
+            }, child: const Icon(Icons.add));
+
+            if (box.isEmpty) {
+              return Scaffold(
+                  floatingActionButton: button,
+                  body: const Center(child: Text("Das Deck ist leer.", style: TextStyle(color: Colors.grey)))
+              );
+            }
+            return Expanded(child: ListView.builder(
+                itemCount: box.values.length,
+                itemBuilder: (context, index) {
+                  return ListTile(
+                    title: Text(box.getAt(index).getQuestion())
+                  );
+                }
+            ));
+          },
+        ))
+      ]
     );
   }
 }
