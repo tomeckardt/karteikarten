@@ -52,7 +52,6 @@ class _MainFrameState extends State<MainFrame> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Hallo")),
       body: _pages[_pageIndex],
       bottomNavigationBar: BottomNavigationBar(
         items: const [

@@ -4,30 +4,6 @@ part of 'card_editor.dart';
 
 String _currentText = '';
 
-AlertDialog _showAddDeckDialog(_CardEditorState state) {
-    return AlertDialog(
-      title: const Text("Neues Deck"),
-      content: TextField(
-        onChanged: (value) {
-          _currentText = value;
-        },
-        decoration: const InputDecoration(
-            labelText: "Name des Decks"
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: Navigator.of(state.context).pop,
-          child: const Text("Abbrechen")
-        ),
-        TextButton(onPressed: () {
-          state.updateDecks(_currentText);
-          Navigator.of(state.context).pop();
-        }, child: const Text("OK"))
-      ],
-    );
-}
-
 //### Neue Karteikarte ########################################
 String _q = '', _a = '';
 
@@ -39,10 +15,16 @@ AlertDialog _showAddCardDialog(_CardEditorState state) {
         mainAxisSize: MainAxisSize.min,
         children: [
           TextField(
+            inputFormatters: <TextInputFormatter>[
+              FilteringTextInputFormatter.allow(RegExp("[0-9a-zA-Z]")),
+            ],
             decoration: const InputDecoration(labelText: "Frage"),
             onChanged: (value) => _q = value,
           ),
           TextField(
+            inputFormatters: <TextInputFormatter>[
+              FilteringTextInputFormatter.allow(RegExp("[0-9a-zA-Z]")),
+            ],
             decoration: const InputDecoration(labelText: "Antwort"),
             onChanged: (value) => _a = value,
           )
@@ -52,7 +34,7 @@ AlertDialog _showAddCardDialog(_CardEditorState state) {
     actions: [
       TextButton(onPressed: Navigator.of(state.context).pop, child: const Text("Abbrechen")),
       TextButton(onPressed: () {
-        state.updateDeck(IndexCard(_q, _a));
+        //state.updateDeck(IndexCard(_q, _a));
         Navigator.of(state.context).pop();
       }, child: const Text("OK"))
     ],
