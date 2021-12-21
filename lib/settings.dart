@@ -10,16 +10,13 @@ class Settings extends StatefulWidget {
 
 class _SettingsState extends State<Settings> {
 
-  late final Box _settings;
+  late Box _settings;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-          leading: IconButton(
-            onPressed: Navigator.of(context).pop,
-            icon: const Icon(Icons.arrow_back)
-          ),
+          leading: const BackButton(),
           title: const Text("Einstellungen")
       ),
       body: FutureBuilder(
@@ -31,11 +28,14 @@ class _SettingsState extends State<Settings> {
                 ListTile(
                   title: const TextField(
                     decoration: InputDecoration(
+                        prefixIcon: Icon(Icons.earbuds_sharp),
+                        contentPadding: EdgeInsets.all(10),
+                        border: OutlineInputBorder(),
                         labelText: "Name des Geräts"
                     ),
                   ),
                   trailing: ElevatedButton(onPressed: () { }, child: const Text("Verbinden")),
-                )
+                ),
               ],
             );
           }

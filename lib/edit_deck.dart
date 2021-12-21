@@ -1,3 +1,7 @@
+import 'dart:async';
+
+import 'package:esense_flutter/esense.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import 'settings.dart';
@@ -15,15 +19,28 @@ class EditDeck extends StatefulWidget {
 class _EditDeckState extends State<EditDeck> {
 
   late final Deck _deck;
+  String eSenseName = "eSense-0569";
+  bool _connected = false;
+  late StreamSubscription _subscription;
 
   final _formKey = GlobalKey<FormState>();
-  //Temporäre Attribute
   final TextEditingController _qController = TextEditingController(), _aController = TextEditingController();
 
   @override
   void initState() {
     _deck = widget.deck;
+    _subscription = ESenseManager().connectionEvents.listen((event) {
+        setState(() {
+          _connected = event.type == ConnectionType.connected;
+        });
+    });
+    _connectToESense();
     super.initState();
+  }
+
+  void _connectToESense() async {
+    await ESenseManager().disconnect();
+    await ESenseManager().connect(eSenseName);
   }
 
   @override
@@ -31,13 +48,13 @@ class _EditDeckState extends State<EditDeck> {
     return Scaffold(
       //### AppBar #############################################################
       appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: Navigator.of(context).pop
-        ),
+        leading: const BackButton(),
         title: Text(_deck.name),
         actions: [
-          ElevatedButton.icon(onPressed: _showAddCardDialog, icon: const Icon(Icons.add), label: const Text("Karte"))
+          ElevatedButton.icon(
+              onPressed: _showAddCardDialog, icon: const Icon(Icons.add), label: const Text("Karte"),
+              style: ButtonStyle(elevation: MaterialStateProperty.all(0)),
+          )
         ],
       ),
       body: ListView.builder(
@@ -57,8 +74,9 @@ class _EditDeckState extends State<EditDeck> {
         }
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () { },
-        child: const Icon(Icons.play_arrow),
+        onPressed: null,
+        child: Icon(_connected ? Icons.play_arrow : Icons.bluetooth_disabled),
+        backgroundColor: _connected ? null : Colors.grey
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       bottomNavigationBar: BottomAppBar(
@@ -66,8 +84,11 @@ class _EditDeckState extends State<EditDeck> {
         child: Padding(
             child: Row(
               children: [
-                const Text("Nicht verbunden", style: TextStyle(color: Colors.red)),
-                IconButton(onPressed: () { }, icon: const Icon(Icons.refresh)),
+                Text(
+                  _connected ? "Verbunden" : "Nicht verbunden",
+                  style: _connected ? null : const TextStyle(color: Colors.red),
+                ),
+                IconButton(onPressed: () => ESenseManager().connect(eSenseName), icon: const Icon(Icons.refresh)),
                 const Spacer(),
                 ElevatedButton.icon(onPressed: () => Utils.switchTo(context, const Settings()), icon: const Icon(Icons.settings), label: const Text("Einstellungen"))
               ],
@@ -114,6 +135,12 @@ class _EditDeckState extends State<EditDeck> {
             )
         )
     );
+  }
+
+  @override
+  void dispose() {
+    _subscription.cancel();
+    super.dispose();
   }
 
   static String _shorten(String s) {
