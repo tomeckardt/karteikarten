@@ -17,3 +17,25 @@ void main() async {
   Hive.registerAdapter(DeckAdapter());
   runApp(const MaterialApp(home: CardEditor()));
 }
+
+class Utils {
+
+  static void switchTo(BuildContext context, Widget widget) {
+    Navigator.of(context).push(
+        PageRouteBuilder(
+            pageBuilder: (context, animation, an2) => widget,
+            transitionDuration: const Duration(milliseconds: 100),
+            reverseTransitionDuration: const Duration(milliseconds: 100),
+            transitionsBuilder: (context, an1, an2, child) {
+              return SlideTransition(
+                position: Tween(
+                    begin: const Offset(1.0, 0.0),
+                    end: const Offset(0.0, 0.0))
+                    .animate(an1),
+                child: child,
+              );
+            }
+        )
+    );
+  }
+}

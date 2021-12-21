@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:hive/hive.dart';
-import 'package:mcapp/edit_deck.dart';
 
+import 'edit_deck.dart';
 import 'card_deck.dart';
+import 'main.dart';
 
 class CardEditor extends StatefulWidget {
   const CardEditor({Key? key}) : super(key: key);
@@ -14,7 +15,7 @@ class CardEditor extends StatefulWidget {
 
 class _CardEditorState extends State<CardEditor> {
 
-  late final Box _decks;
+  late Box _decks;
 
   String _newDeckName = '';
 
@@ -46,22 +47,7 @@ class _CardEditorState extends State<CardEditor> {
                               icon: const Icon(Icons.arrow_forward),
                               onPressed: () {
                                 final page = EditDeck(deck: correspondingDeck);
-                                Navigator.of(context).push(
-                                    PageRouteBuilder(
-                                        pageBuilder: (context, animation, an2) => page,
-                                        transitionDuration: const Duration(milliseconds: 100),
-                                        reverseTransitionDuration: const Duration(milliseconds: 100),
-                                        transitionsBuilder: (context, an1, an2, child) {
-                                          return SlideTransition(
-                                            position: Tween(
-                                                begin: const Offset(1.0, 0.0),
-                                                end: const Offset(0.0, 0.0))
-                                                .animate(an1),
-                                            child: child,
-                                          );
-                                        }
-                                    )
-                                );
+                                Utils.switchTo(context, page);
                               },
                             ),
                           )
