@@ -11,6 +11,8 @@ class Deck extends HiveObject {
   List<IndexCard> _cards = [];
   @HiveField(1)
   String name;
+  @HiveField(2)
+  int index = 0;
 
   addIndexCard(String q, String a) => _cards.add(IndexCard(q, a));
 
@@ -19,6 +21,13 @@ class Deck extends HiveObject {
   List<IndexCard> getIndexCards() => _cards;
 
   int length() => _cards.length;
+
+  IndexCard? next() {
+    index %= length();
+    if (_cards.isNotEmpty) {
+      return _cards.elementAt(index++);
+    }
+  }
 
   Map<String, dynamic> toJson() => {
     "IndexCards": _cards,

@@ -1,8 +1,8 @@
 import 'dart:async';
 
 import 'package:esense_flutter/esense.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_tts/flutter_tts.dart';
 
 import 'settings.dart';
 import 'card_deck.dart';
@@ -19,12 +19,15 @@ class EditDeck extends StatefulWidget {
 class _EditDeckState extends State<EditDeck> {
 
   late final Deck _deck;
+
   String eSenseName = "eSense-0569";
   bool _connected = false;
   late StreamSubscription _subscription;
 
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _qController = TextEditingController(), _aController = TextEditingController();
+
+  final FlutterTts _tts = FlutterTts();
 
   @override
   void initState() {
@@ -34,8 +37,15 @@ class _EditDeckState extends State<EditDeck> {
           _connected = event.type == ConnectionType.connected;
         });
     });
+    _tts.setLanguage("de-DE");
     _connectToESense();
     super.initState();
+  }
+
+  Future _speak() async {
+    IndexCard? card = _deck.next();
+    if (card == null) return;
+    await _tts.speak(card.getQuestion());
   }
 
   void _connectToESense() async {
@@ -74,7 +84,7 @@ class _EditDeckState extends State<EditDeck> {
         }
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: null,
+        onPressed: _speak,
         child: Icon(_connected ? Icons.play_arrow : Icons.bluetooth_disabled),
         backgroundColor: _connected ? null : Colors.grey
       ),
