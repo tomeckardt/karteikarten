@@ -29,6 +29,12 @@ class Deck extends HiveObject {
     }
   }
 
+  IndexCard? current() {
+    if (_cards.isNotEmpty) {
+      return _cards.elementAt(index %= length());
+    }
+  }
+
   Map<String, dynamic> toJson() => {
     "IndexCards": _cards,
     "name": name

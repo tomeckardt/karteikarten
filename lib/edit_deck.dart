@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:esense_flutter/esense.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_tts/flutter_tts.dart';
+import 'package:mcapp/head_movement.dart';
 
 import 'settings.dart';
 import 'card_deck.dart';
@@ -22,7 +23,12 @@ class _EditDeckState extends State<EditDeck> {
 
   String eSenseName = "eSense-0569";
   bool _connected = false;
-  late StreamSubscription _subscription;
+  late StreamSubscription _connectionSubscription;
+  late StreamSubscription? _sensorSubscription;
+
+  bool _paused = true;
+  final HeadMovementDetector _detector = HeadMovementDetector(threshold: 4000);
+  int? _gyroOffsetY;
 
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _qController = TextEditingController(), _aController = TextEditingController();
@@ -32,20 +38,47 @@ class _EditDeckState extends State<EditDeck> {
   @override
   void initState() {
     _deck = widget.deck;
-    _subscription = ESenseManager().connectionEvents.listen((event) {
+    _connectionSubscription = ESenseManager().connectionEvents.listen((event) {
         setState(() {
-          _connected = event.type == ConnectionType.connected;
+          if (!(_connected = event.type == ConnectionType.connected)) {
+            _paused = true;
+          }
         });
     });
     _tts.setLanguage("de-DE");
     _connectToESense();
+    _detector.onNodRight = _nextCard;
+    _detector.onNodLeft = _tellAnswer;
     super.initState();
   }
 
-  Future _speak() async {
+  Future _toggleRunDeck() async {
+    setState(() {
+      _paused = !_paused;
+    });
+    if (_paused) {
+      _sensorSubscription?.cancel();
+      await _tts.stop();
+    } else {
+      _gyroOffsetY = null;
+      _sensorSubscription = ESenseManager().sensorEvents.listen((event) {
+        _gyroOffsetY ??= event.gyro![1];
+        _detector.update(_gyroOffsetY! - event.gyro![1]);
+        //print("$_gyroOffsetY, ${_gyroOffsetY! - event.gyro![1]}");
+      });
+    }
+  }
+
+  Future _nextCard() async {
     IndexCard? card = _deck.next();
     if (card == null) return;
     await _tts.speak(card.getQuestion());
+  }
+
+  Future _tellAnswer() async {
+    IndexCard? card = _deck.current();
+    if (card == null) return;
+    await _tts.speak(card.getAnswer());
   }
 
   void _connectToESense() async {
@@ -84,8 +117,10 @@ class _EditDeckState extends State<EditDeck> {
         }
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: _speak,
-        child: Icon(_connected ? Icons.play_arrow : Icons.bluetooth_disabled),
+        onPressed: _connected ? _toggleRunDeck : null,
+        child: Icon(_connected
+            ? _paused ? Icons.play_arrow : Icons.pause
+            : Icons.bluetooth_disabled),
         backgroundColor: _connected ? null : Colors.grey
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
@@ -149,7 +184,9 @@ class _EditDeckState extends State<EditDeck> {
 
   @override
   void dispose() {
-    _subscription.cancel();
+    _connectionSubscription.cancel();
+    _sensorSubscription?.cancel();
+    ESenseManager().disconnect();
     super.dispose();
   }
 
