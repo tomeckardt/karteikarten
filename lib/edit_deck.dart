@@ -24,11 +24,9 @@ class _EditDeckState extends State<EditDeck> {
   String eSenseName = "eSense-0569";
   bool _connected = false;
   late StreamSubscription _connectionSubscription;
-  late StreamSubscription? _sensorSubscription;
 
   bool _paused = true;
   final HeadMovementDetector _detector = HeadMovementDetector(threshold: 4000);
-  int? _gyroOffsetY;
 
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _qController = TextEditingController(), _aController = TextEditingController();
@@ -57,15 +55,10 @@ class _EditDeckState extends State<EditDeck> {
       _paused = !_paused;
     });
     if (_paused) {
-      _sensorSubscription?.cancel();
+      _detector.cancel();
       await _tts.stop();
     } else {
-      _gyroOffsetY = null;
-      _sensorSubscription = ESenseManager().sensorEvents.listen((event) {
-        _gyroOffsetY ??= event.gyro![1];
-        _detector.update(_gyroOffsetY! - event.gyro![1]);
-        //print("$_gyroOffsetY, ${_gyroOffsetY! - event.gyro![1]}");
-      });
+      _detector.initStreamSubscription();
     }
   }
 
@@ -185,7 +178,7 @@ class _EditDeckState extends State<EditDeck> {
   @override
   void dispose() {
     _connectionSubscription.cancel();
-    _sensorSubscription?.cancel();
+    _detector.cancel();
     ESenseManager().disconnect();
     super.dispose();
   }
