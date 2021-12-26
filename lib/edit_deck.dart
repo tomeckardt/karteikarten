@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:esense_flutter/esense.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_tts/flutter_tts.dart';
+import 'package:hive/hive.dart';
 import 'package:mcapp/head_movement.dart';
 
 import 'settings.dart';
@@ -21,7 +22,7 @@ class _EditDeckState extends State<EditDeck> {
 
   late final Deck _deck;
 
-  String eSenseName = "eSense-0569";
+  Box? _settings;
   bool _connected = false;
   late StreamSubscription _connectionSubscription;
 
@@ -76,7 +77,7 @@ class _EditDeckState extends State<EditDeck> {
 
   void _connectToESense() async {
     await ESenseManager().disconnect();
-    await ESenseManager().connect(eSenseName);
+    await ESenseManager().connect(_settings!.get("eSenseName", defaultValue: ""));
   }
 
   @override
@@ -93,21 +94,29 @@ class _EditDeckState extends State<EditDeck> {
           )
         ],
       ),
-      body: ListView.builder(
-        itemCount: _deck.length(),
-        itemBuilder: (context, index) {
-          IndexCard card = _deck.getIndexCards().elementAt(index);
-          return Card(
-            child: ListTile(
-              trailing: IconButton(onPressed: () => setState(() {
-                _deck.removeIndexCard(index);
-                _deck.save();
-              }), icon: const Icon(Icons.delete)),
-              title: Text(_shorten(card.getQuestion())),
-              subtitle: Text(_shorten(card.getAnswer())),
-            ),
-          );
-        }
+      body: FutureBuilder(
+        future: Hive.openBox("settings").then((value) => _settings = Hive.box("settings")),
+        builder: (context, snapshot) {
+          if (snapshot.hasData) {
+            return ListView.builder(
+                itemCount: _deck.length(),
+                itemBuilder: (context, index) {
+                  IndexCard card = _deck.getIndexCards().elementAt(index);
+                  return Card(
+                    child: ListTile(
+                      trailing: IconButton(onPressed: () => setState(() {
+                        _deck.removeIndexCard(index);
+                        _deck.save();
+                      }), icon: const Icon(Icons.delete)),
+                      title: Text(_shorten(card.getQuestion())),
+                      subtitle: Text(_shorten(card.getAnswer())),
+                    ),
+                  );
+                }
+            );
+          }
+          return const Center(child: Text("Einstellungen werden geladen"));
+        },
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _connected ? _toggleRunDeck : null,
@@ -126,7 +135,7 @@ class _EditDeckState extends State<EditDeck> {
                   _connected ? "Verbunden" : "Nicht verbunden",
                   style: _connected ? null : const TextStyle(color: Colors.red),
                 ),
-                IconButton(onPressed: () => ESenseManager().connect(eSenseName), icon: const Icon(Icons.refresh)),
+                IconButton(onPressed: () => ESenseManager().connect(_settings!.get("eSenseName", defaultValue: "")), icon: const Icon(Icons.refresh)),
                 const Spacer(),
                 ElevatedButton.icon(onPressed: () => Utils.switchTo(context, const Settings()), icon: const Icon(Icons.settings), label: const Text("Einstellungen"))
               ],

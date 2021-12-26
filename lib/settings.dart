@@ -11,6 +11,8 @@ class Settings extends StatefulWidget {
 class _SettingsState extends State<Settings> {
 
   late Box _settings;
+  late final TextEditingController _nameController;
+  final maxValue = 8000, minValue = 1500;
 
   @override
   Widget build(BuildContext context) {
@@ -25,17 +27,40 @@ class _SettingsState extends State<Settings> {
           if (snapshot.hasData) {
             return ListView(
               children: [
+                const SizedBox(height: 20),
                 ListTile(
-                  title: const TextField(
-                    decoration: InputDecoration(
+                  title: TextField(
+                    controller: TextEditingController(text: _settings.get("eSenseName", defaultValue: "")),
+                    onSubmitted: (value) => _settings.put("eSenseName", value),
+                    decoration: const InputDecoration(
                         prefixIcon: Icon(Icons.earbuds_sharp),
                         contentPadding: EdgeInsets.all(10),
                         border: OutlineInputBorder(),
                         labelText: "Name des Geräts"
                     ),
-                  ),
-                  trailing: ElevatedButton(onPressed: () { }, child: const Text("Verbinden")),
+                  )
                 ),
+                const SizedBox(height: 20),
+                ListTile(
+                  title: const Text("Empfindlichkeit"),
+                  subtitle: Row(
+                    children: [
+                      const Expanded(child: Text("sehr empfindlich", overflow: TextOverflow.clip)),
+                      Slider(
+                        label: "Empfindlichkeit",
+                        onChanged: (value) {
+                          setState(() {
+                            _settings.put("sensitivity", value.toInt());
+                          });
+                        },
+                        divisions: maxValue - minValue,
+                        value: _settings.get("sensitivity", defaultValue: 4000.0).toDouble(),
+                        min: minValue.toDouble(), max: maxValue.toDouble(),
+                      ),
+                      const Expanded(child: Text("wenig empfindlich", overflow: TextOverflow.clip))
+                    ],
+                  )
+                )
               ],
             );
           }
