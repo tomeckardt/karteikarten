@@ -3,7 +3,8 @@ import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
-import 'package:mcapp/card_editor.dart';
+import 'package:mcapp/deck_overview.dart';
+import 'package:mcapp/settings.dart';
 import 'package:path_provider/path_provider.dart' as path_provider;
 import 'package:mcapp/card_deck.dart';
 
@@ -15,8 +16,44 @@ void main() async {
   Hive.init(directory.path);
   Hive.registerAdapter(IndexCardAdapter());
   Hive.registerAdapter(DeckAdapter());
-  runApp(const MaterialApp(home: CardEditor()));
+  //runApp(const MaterialApp(home: CardEditor()));
+  runApp(const MaterialApp(home: MainFrame()));
 }
+
+class MainFrame extends StatefulWidget {
+  const MainFrame({Key? key}) : super(key: key);
+
+  @override
+  _MainFrameState createState() => _MainFrameState();
+}
+
+class _MainFrameState extends State<MainFrame> {
+  int _currentIndex = 0;
+  final List<Widget> _pages = const [MaterialApp(home: DeckOverview()), Settings(), Text("Kommt noch")];
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: _pages[_currentIndex],
+      bottomNavigationBar: BottomNavigationBar(
+          currentIndex: _currentIndex,
+          type: BottomNavigationBarType.fixed,
+          backgroundColor: Theme.of(context).bottomAppBarColor,
+          onTap: (index) => {
+            setState(() {
+              _currentIndex = index;
+            })
+          },
+          items: const [
+            BottomNavigationBarItem(icon: Icon(Icons.library_add), label: "Karten"),
+            BottomNavigationBarItem(icon: Icon(Icons.settings), label: "Einstellungen"),
+            BottomNavigationBarItem(icon: Icon(Icons.leaderboard), label: "Statistiken")
+          ]
+      ),
+    );
+  }
+}
+
 
 class Utils {
 

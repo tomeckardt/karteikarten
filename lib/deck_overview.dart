@@ -6,14 +6,14 @@ import 'edit_deck.dart';
 import 'card_deck.dart';
 import 'main.dart';
 
-class CardEditor extends StatefulWidget {
-  const CardEditor({Key? key}) : super(key: key);
+class DeckOverview extends StatefulWidget {
+  const DeckOverview({Key? key}) : super(key: key);
 
   @override
-  _CardEditorState createState() => _CardEditorState();
+  _DeckOverviewState createState() => _DeckOverviewState();
 }
 
-class _CardEditorState extends State<CardEditor> {
+class _DeckOverviewState extends State<DeckOverview> {
 
   late Box _decks;
 

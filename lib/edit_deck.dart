@@ -4,6 +4,7 @@ import 'package:esense_flutter/esense.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:hive/hive.dart';
+import 'package:mcapp/deck_overview.dart';
 import 'package:mcapp/head_movement.dart';
 
 import 'settings.dart';
@@ -118,30 +119,23 @@ class _EditDeckState extends State<EditDeck> {
           return const Center(child: Text("Einstellungen werden geladen"));
         },
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _connected ? _toggleRunDeck : null,
-        child: Icon(_connected
-            ? _paused ? Icons.play_arrow : Icons.pause
-            : Icons.bluetooth_disabled),
-        backgroundColor: _connected ? null : Colors.grey
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      bottomNavigationBar: BottomAppBar(
-        shape: const CircularNotchedRectangle(),
-        child: Padding(
-            child: Row(
-              children: [
-                Text(
-                  _connected ? "Verbunden" : "Nicht verbunden",
-                  style: _connected ? null : const TextStyle(color: Colors.red),
-                ),
-                IconButton(onPressed: () => ESenseManager().connect(_settings!.get("eSenseName", defaultValue: "")), icon: const Icon(Icons.refresh)),
-                const Spacer(),
-                ElevatedButton.icon(onPressed: () => Utils.switchTo(context, const Settings()), icon: const Icon(Icons.settings), label: const Text("Einstellungen"))
-              ],
+      floatingActionButton: Wrap(
+          children: [
+            _connected ? const Spacer() : FloatingActionButton(
+              heroTag: "btn1",
+              onPressed: () => ESenseManager().connect(_settings!.get("eSenseName", defaultValue: "")),
+              child: const Icon(Icons.refresh)
             ),
-            padding: const EdgeInsets.all(10),
-        ),
+            const Padding(padding: EdgeInsets.all(10)),
+            FloatingActionButton(
+              heroTag: "btn2",
+              onPressed: _connected ? _toggleRunDeck : null,
+              child: Icon(_connected
+                  ? _paused ? Icons.play_arrow : Icons.pause
+                  : Icons.bluetooth_disabled),
+              backgroundColor: _connected ? null : Colors.grey
+            )
+          ]
       ),
     );
   }
