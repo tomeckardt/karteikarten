@@ -11,14 +11,12 @@ class Settings extends StatefulWidget {
 class _SettingsState extends State<Settings> {
 
   late Box _settings;
-  late final TextEditingController _nameController;
   final maxValue = 8000, minValue = 1500;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-          leading: const BackButton(),
           title: const Text("Einstellungen")
       ),
       body: FutureBuilder(

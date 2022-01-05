@@ -17,7 +17,8 @@ class _DeckOverviewState extends State<DeckOverview> {
 
   late Box _decks;
 
-  String _newDeckName = '';
+  final TextEditingController _textController = TextEditingController();
+  void Function()? _addDeck;
 
   @override
   Widget build(BuildContext context) {
@@ -44,7 +45,7 @@ class _DeckOverviewState extends State<DeckOverview> {
                                 })
                             ),
                             trailing: IconButton(
-                              icon: const Icon(Icons.arrow_forward),
+                              icon: const Icon(Icons.chevron_right),
                               onPressed: () {
                                 final page = EditDeck(deck: correspondingDeck);
                                 Utils.switchTo(context, page);
@@ -54,31 +55,35 @@ class _DeckOverviewState extends State<DeckOverview> {
                       );
                     }
                 ),
-                bottomNavigationBar: BottomAppBar(child: Padding(padding: const EdgeInsets.all(12), child: Row(
+                bottomNavigationBar: Padding(padding: const EdgeInsets.all(12), child: Row(
                   children: [
                     Expanded(child: TextField(
+                        controller: _textController,
                         decoration: InputDecoration(
                             labelText: "Name des Decks",
-                            errorText: _decks.containsKey(_newDeckName)
+                            errorText: _decks.containsKey(_textController.text)
                                 ? "Name bereits vergeben"
                                 : null
                         ),
                         onChanged: (value) => setState(() {
-                          _newDeckName = value;
+                          _addDeck = (_textController.text == '' || _decks.containsKey(_textController.text)) ? null :
+                              () {
+                            setState(() {
+                              _decks.put(_textController.text, Deck(_textController.text));
+                              _textController.text = '';
+                              _addDeck = null;
+                            });
+                            FocusScope.of(context).unfocus();
+                          };
                         })
                     )),
                     const Padding(padding: EdgeInsets.all(12)),
-                    ElevatedButton.icon(onPressed: (_newDeckName == '' || _decks.containsKey(_newDeckName)) ? null :
-                        () {
-                      setState(() {
-                        _decks.put(_newDeckName, Deck(_newDeckName));
-                      });
-                    },
+                    ElevatedButton.icon(onPressed: _addDeck,
                         icon: const Icon(Icons.add), label: const Text("Deck")
                     )
                   ],
                 ),
-                )));
+                ));
           }
           return const Center(child: Text("Decks werden geladen", style: TextStyle(color: Colors.grey)));
         }
