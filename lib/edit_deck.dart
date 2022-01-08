@@ -30,9 +30,6 @@ class _EditDeckState extends State<EditDeck> {
   bool _paused = true;
   final HeadMovementDetector _detector = HeadMovementDetector(threshold: 4000);
 
-  final _formKey = GlobalKey<FormState>();
-  final TextEditingController _qController = TextEditingController(), _aController = TextEditingController();
-
   final FlutterTts _tts = FlutterTts();
 
   @override
@@ -89,9 +86,8 @@ class _EditDeckState extends State<EditDeck> {
         leading: const BackButton(),
         title: Text(_deck.name),
         actions: [
-          ElevatedButton.icon(
-              onPressed: _showAddCardDialog, icon: const Icon(Icons.add), label: const Text("Karte"),
-              style: ButtonStyle(elevation: MaterialStateProperty.all(0)),
+          IconButton(
+              onPressed: _showAddCardDialog, icon: const Icon(Icons.add)
           )
         ],
       ),
@@ -141,41 +137,54 @@ class _EditDeckState extends State<EditDeck> {
   }
 
   void _showAddCardDialog() {
-    showDialog(context: context, builder: (context) =>
-        Form(
-            key: _formKey,
-            child: AlertDialog(
-              title: const Text("Neue Karteikarte"),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  TextFormField(
-                      controller: _qController,
-                      validator: (value) => (value == null || value.isEmpty)
-                          ? "Eingabe ist leer" : null
-                  ),
-                  TextFormField(
-                      controller: _aController,
-                      validator: (value) => (value == null || value.isEmpty)
-                          ? "Eingabe ist leer" : null
-                  )
-                ],
-              ),
-              actions: [
-                TextButton(onPressed: Navigator.of(context).pop, child: const Text("Abbrechen")),
-                TextButton(onPressed: () {
-                  if (_formKey.currentState!.validate()) {
-                    setState(() {
-                      _deck.addIndexCard(_qController.text, _aController.text);
-                      _deck.save();
-                    });
-                    Navigator.of(context).pop();
-                  }
-                }, child: const Text("OK"))
+    showDialog(context: context, builder: (context) {
+      final _formKey = GlobalKey<FormState>();
+      final TextEditingController _qController = TextEditingController(), _aController = TextEditingController();
+      return Form(
+          key: _formKey,
+          child: AlertDialog(
+            title: const Text("Neue Karteikarte"),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextFormField(
+                    minLines: 1,
+                    maxLines: 2,
+                    decoration: const InputDecoration(labelText: "Frage"),
+                    controller: _qController,
+                    validator: (value) =>
+                    (value == null || value.isEmpty)
+                        ? "Eingabe ist leer" : null
+                ),
+                const Padding(padding: EdgeInsets.all(12)),
+                TextFormField(
+                    minLines: 1,
+                    maxLines: 4,
+                    decoration: const InputDecoration(labelText: "Antwort"),
+                    controller: _aController,
+                    validator: (value) =>
+                    (value == null || value.isEmpty)
+                        ? "Eingabe ist leer" : null
+                )
               ],
-            )
-        )
-    );
+            ),
+            actions: [
+              TextButton(onPressed: Navigator
+                  .of(context)
+                  .pop, child: const Text("Abbrechen")),
+              TextButton(onPressed: () {
+                if (_formKey.currentState!.validate()) {
+                  setState(() {
+                    _deck.addIndexCard(_qController.text, _aController.text);
+                    _deck.save();
+                  });
+                  Navigator.of(context).pop();
+                }
+              }, child: const Text("OK"))
+            ],
+          )
+      );
+    });
   }
 
   @override
