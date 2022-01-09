@@ -49,9 +49,9 @@ class IndexCard extends HiveObject {
   IndexCard(this._q, this._a);
 
   @HiveField(0)
-  final String _q;
+  String _q;
   @HiveField(1)
-  final String _a;
+  String _a;
 
   String getQuestion() {
     return _q;
@@ -59,6 +59,14 @@ class IndexCard extends HiveObject {
 
   String getAnswer() {
     return _a;
+  }
+
+  void setQuestion(String q) {
+    _q = q;
+  }
+
+  void setAnswer(String a) {
+    _a = a;
   }
 
   Map<String, dynamic> toJson() => {

@@ -26,6 +26,8 @@ class _EditDeckState extends State<EditDeck> {
   Box? _settings;
   bool _connected = false;
   late StreamSubscription _connectionSubscription;
+  
+  int _expandedCardIndex = -1;
 
   bool _paused = true;
   final HeadMovementDetector _detector = HeadMovementDetector(threshold: 4000);
@@ -99,14 +101,21 @@ class _EditDeckState extends State<EditDeck> {
                 itemCount: _deck.length(),
                 itemBuilder: (context, index) {
                   IndexCard card = _deck.getIndexCards().elementAt(index);
+                  bool expanded = _expandedCardIndex == index;
                   return Card(
                     child: ListTile(
-                      trailing: IconButton(onPressed: () => setState(() {
+                      onTap: () {
+                        setState(() {
+                          _expandedCardIndex = expanded ? -1 : index;
+                        });
+                      },
+                      trailing: IconButton(onPressed: () => _showAddCardDialog(card), icon: const Icon(Icons.edit)),
+                      leading: IconButton(onPressed: () => setState(() {
                         _deck.removeIndexCard(index);
                         _deck.save();
                       }), icon: const Icon(Icons.delete)),
                       title: Text(_shorten(card.getQuestion())),
-                      subtitle: Text(_shorten(card.getAnswer())),
+                      subtitle: Text(expanded ? card.getAnswer() : _shorten(card.getAnswer()), overflow: TextOverflow.fade),
                     ),
                   );
                 }
@@ -136,14 +145,15 @@ class _EditDeckState extends State<EditDeck> {
     );
   }
 
-  void _showAddCardDialog() {
+  void _showAddCardDialog([IndexCard? card]) {
     showDialog(context: context, builder: (context) {
       final _formKey = GlobalKey<FormState>();
-      final TextEditingController _qController = TextEditingController(), _aController = TextEditingController();
+      final TextEditingController _qController = TextEditingController(text: card?.getQuestion()),
+          _aController = TextEditingController(text: card?.getAnswer());
       return Form(
           key: _formKey,
           child: AlertDialog(
-            title: const Text("Neue Karteikarte"),
+            title: Text(card == null ? "Neue Karteikarte" : "Bearbeiten"),
             content: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -169,13 +179,16 @@ class _EditDeckState extends State<EditDeck> {
               ],
             ),
             actions: [
-              TextButton(onPressed: Navigator
-                  .of(context)
-                  .pop, child: const Text("Abbrechen")),
+              TextButton(onPressed: Navigator.of(context).pop, child: const Text("Abbrechen")),
               TextButton(onPressed: () {
                 if (_formKey.currentState!.validate()) {
                   setState(() {
-                    _deck.addIndexCard(_qController.text, _aController.text);
+                    if (card == null) {
+                      _deck.addIndexCard(_qController.text, _aController.text);
+                    } else {
+                      card.setQuestion(_qController.text);
+                      card.setAnswer(_aController.text);
+                    }
                     _deck.save();
                   });
                   Navigator.of(context).pop();
@@ -196,6 +209,9 @@ class _EditDeckState extends State<EditDeck> {
   }
 
   static String _shorten(String s) {
+    final lines = s.split('\n');
+    lines[0] += lines.length > 1 ? '...' : '';
+    s = lines[0];
     return s.length <= 30 ? s : s.substring(0, 27) + '...';
   }
 }

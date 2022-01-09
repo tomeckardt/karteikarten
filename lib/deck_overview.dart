@@ -37,6 +37,10 @@ class _DeckOverviewState extends State<DeckOverview> {
                       var correspondingDeck = _decks.getAt(index);
                       return Card(
                           child: ListTile(
+                            onTap: () {
+                              final page = EditDeck(deck: correspondingDeck);
+                              Utils.switchTo(context, page);
+                            },
                             title: Text(correspondingDeck.name),
                             leading: IconButton(
                                 icon: const Icon(Icons.delete),
@@ -44,13 +48,7 @@ class _DeckOverviewState extends State<DeckOverview> {
                                   _decks.deleteAt(index);
                                 })
                             ),
-                            trailing: IconButton(
-                              icon: const Icon(Icons.chevron_right),
-                              onPressed: () {
-                                final page = EditDeck(deck: correspondingDeck);
-                                Utils.switchTo(context, page);
-                              },
-                            ),
+                            trailing: const Icon(Icons.chevron_right),
                           )
                       );
                     }
