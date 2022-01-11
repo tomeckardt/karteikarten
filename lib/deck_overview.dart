@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:hive/hive.dart';
+import 'package:mcapp/settings.dart';
 
 import 'edit_deck.dart';
 import 'card_deck.dart';
@@ -23,7 +24,14 @@ class _DeckOverviewState extends State<DeckOverview> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Decks")),
+      appBar: AppBar(
+          title: const Text("Decks"),
+          actions: [
+            IconButton(onPressed: () {
+              Utils.switchTo(context, const Settings());
+            }, icon: const Icon(Icons.settings))
+          ],
+      ),
       bottomSheet: FutureBuilder(
         future: Hive.openBox("decks").then((value) => _decks = Hive.box("decks")),
         builder: (context, snapshot) {
@@ -58,7 +66,14 @@ class _DeckOverviewState extends State<DeckOverview> {
                     Expanded(child: TextField(
                         controller: _textController,
                         decoration: InputDecoration(
-                            labelText: "Name des Decks",
+                            filled: true,
+                            fillColor: Colors.white,
+                            contentPadding: const EdgeInsets.all(12),
+                            border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10),
+                                borderSide: const BorderSide(width: 0, style: BorderStyle.none)
+                            ),
+                            hintText: "Name des Decks",
                             errorText: _decks.containsKey(_textController.text)
                                 ? "Name bereits vergeben"
                                 : null

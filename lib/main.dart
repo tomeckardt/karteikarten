@@ -29,35 +29,20 @@ class MainFrame extends StatefulWidget {
 }
 
 class _MainFrameState extends State<MainFrame> {
-  int _currentIndex = 0;
-
-  final List<Widget> _pages = [
-    Navigator(
-        onGenerateRoute: (_) => MaterialPageRoute(builder: (_) => const DeckOverview()),
-    ), const Settings(), const Center(child: Text("Kommt noch"))
-  ];
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(home:
-      Scaffold(
-        body: _pages[_currentIndex],
-        bottomNavigationBar: BottomNavigationBar(
-            currentIndex: _currentIndex,
-            type: BottomNavigationBarType.fixed,
-            backgroundColor: Theme.of(context).bottomAppBarColor,
-            onTap: (index) => {
-              setState(() {
-                _currentIndex = index;
-              })
-            },
-            items: const [
-              BottomNavigationBarItem(icon: Icon(Icons.library_add), label: "Karten"),
-              BottomNavigationBarItem(icon: Icon(Icons.settings), label: "Einstellungen"),
-              BottomNavigationBarItem(icon: Icon(Icons.leaderboard), label: "Statistiken")
-            ]
+      const DeckOverview(),
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSwatch().copyWith(
+            primary: const Color(0xff4f6367),
+            secondary: const Color(0xff4f6367),
+            onPrimary: Colors.white,
+            onSecondary: Colors.white,
         ),
-      ),
+        canvasColor: const Color(0xffb8d8d8)
+      )
     );
   }
 }
@@ -69,8 +54,8 @@ class Utils {
     Navigator.of(context).push(
         PageRouteBuilder(
             pageBuilder: (context, animation, an2) => widget,
-            transitionDuration: const Duration(milliseconds: 100),
-            reverseTransitionDuration: const Duration(milliseconds: 100),
+            transitionDuration: const Duration(milliseconds: 200),
+            reverseTransitionDuration: const Duration(milliseconds: 200),
             transitionsBuilder: (context, an1, an2, child) {
               return SlideTransition(
                 position: Tween(

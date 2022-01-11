@@ -90,7 +90,10 @@ class _EditDeckState extends State<EditDeck> {
         actions: [
           IconButton(
               onPressed: _showAddCardDialog, icon: const Icon(Icons.add)
-          )
+          ),
+          IconButton(onPressed: () {
+            Utils.switchTo(context, const Settings());
+          }, icon: const Icon(Icons.settings))
         ],
       ),
       body: FutureBuilder(
@@ -138,7 +141,7 @@ class _EditDeckState extends State<EditDeck> {
               child: Icon(_connected
                   ? _paused ? Icons.play_arrow : Icons.pause
                   : Icons.bluetooth_disabled),
-              backgroundColor: _connected ? null : Colors.grey
+              backgroundColor: _connected ? null : const Color(0xffcd6b72)
             )
           ]
       ),
